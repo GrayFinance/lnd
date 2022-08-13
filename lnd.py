@@ -17,7 +17,7 @@ class Lnd:
         else:
             return request(method=method, url=f"{self.url}{path}", headers=headers, verify=self.certificate, data=dumps(data), stream=True)
 
-    def create_invoice(self, amount: int, memo: str, expiry=(60 * 5)) -> dict:
+    def create_invoice(self, amount: int, memo: str, expiry=300) -> dict:
         invoice = self.call("POST", "/v1/invoices", data={"value": amount, "memo": memo, "expiry": expiry})
         invoice["r_hash"] = b64decode(invoice["r_hash"]).hex()
         return invoice
