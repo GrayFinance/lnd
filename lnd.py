@@ -17,9 +17,9 @@ class Lnd:
         else:
             return request(method=method, url=f"{self.url}{path}", headers=headers, verify=self.certificate, data=dumps(data), stream=True)
 
-    def create_invoice(self, amount: int, memo: str, expiry=300) -> dict:
+    def create_invoice(self, amount: int, memo: str, expiry=(60 * 5)) -> dict:
         return self.call("POST", "/v1/invoices", data={"value": amount, "memo": memo, "expiry": expiry})
-    
+
     @cached(cache=LRUCache(maxsize=100))
     def decode_invoice(self, invoice: str) -> dict:
         return self.call("GET", f"/v1/payreq/{invoice}")
@@ -27,19 +27,22 @@ class Lnd:
     def pay_invoice(self, payment_request: str, fee_limit_sat=None, fee_limit_msat=None, allow_self_payment=True, timeout_seconds=300) -> dict:
         data = {"payment_request": payment_request, "allow_self_payment": allow_self_payment, "timeout_seconds": timeout_seconds}
         if (fee_limit_msat != None):
-            data["fee_limit_msat"] = fee_limit_msat
+            data["fee_limit_msat"] = int(fee_limit_msat)
         else:
-            data["fee_limit_sat"] = fee_limit_sat
+            data["fee_limit_sat"] = int(fee_limit_sat)
         
         for data in self.call("POST", "/v2/router/send", stream=True, data=data).iter_lines():
             data = loads(data).get("result")
-            status = data["status"] 
-            if (status == "IN_FLIGHT"):
+            if (data == None):
                 continue
-            elif (status == "FAILED") or (status != "SUCCEEDED"):
-                return data
-            elif (status == "SUCCEEDED"):
-                return data
+            else:
+                status = data["status"] 
+                if (status == "IN_FLIGHT"):
+                    continue
+                elif (status == "FAILED") or (status != "SUCCEEDED"):
+                    return data
+                elif (status == "SUCCEEDED"):
+                    return data
 
     def lookup_invoice(self, payment_hash: str) -> dict:
         return self.call("GET", f"/v1/invoice/{payment_hash}")
