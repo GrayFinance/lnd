@@ -18,9 +18,7 @@ class Lnd:
             return request(method=method, url=f"{self.url}{path}", headers=headers, verify=self.certificate, data=dumps(data), stream=True)
 
     def create_invoice(self, amount: int, memo: str, expiry=300) -> dict:
-        invoice = self.call("POST", "/v1/invoices", data={"value": amount, "memo": memo, "expiry": expiry})
-        invoice["r_hash"] = b64decode(invoice["r_hash"]).hex()
-        return invoice
+        return self.call("POST", "/v1/invoices", data={"value": amount, "memo": memo, "expiry": expiry})
     
     @cached(cache=LRUCache(maxsize=100))
     def decode_invoice(self, invoice: str) -> dict:
