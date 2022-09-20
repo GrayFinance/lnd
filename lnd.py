@@ -1,6 +1,5 @@
 from cachetools import cached, LRUCache
 from requests import request
-from base64 import b64decode
 from json import loads, dumps
 
 class Lnd:
@@ -17,6 +16,22 @@ class Lnd:
         else:
             return request(method=method, url=f"{self.url}{path}", headers=headers, verify=self.certificate, data=dumps(data), stream=True)
 
+    def wallet_balance(self) -> dict:
+        return self.call("GET", "/v1/balance/blockchain")
+    
+    def get_estimate_fee(self, address: str, amount: int, target_conf=144) -> dict:
+        return self.call("GET", f'/v1/transactions/fee?target_conf={target_conf}&AddrToAmount[{address}]={amount}')
+
+    def send_coins(self, address: str, amount: int, sat_per_vbyte: int = 1) -> dict:
+        data = {"addr": address, "amount": amount, "sat_per_vbyte": sat_per_vbyte}
+        return self.call("POST", "/v1/transactions", data=data)
+    
+    def get_address(self) -> dict:
+        return self.call("GET", "/v1/newaddress")
+
+    def channels_balance(self) -> dict:
+        return self.call("GET", "/v1/balance/channels")
+    
     def create_invoice(self, amount: int, memo: str, expiry=(60 * 5)) -> dict:
         return self.call("POST", "/v1/invoices", data={"value": amount, "memo": memo, "expiry": expiry})
 
