@@ -32,9 +32,12 @@ class Lnd:
     def channels_balance(self) -> dict:
         return self.call("GET", "/v1/balance/channels")
     
+    def transactions_subscribe(self)  -> object:
+        return self.call("GET", "/v1/transactions/subscribe", stream=True)
+
     def create_invoice(self, amount: int, memo: str, expiry=(60 * 5)) -> dict:
         return self.call("POST", "/v1/invoices", data={"value": amount, "memo": memo, "expiry": expiry})
-
+    
     @cached(cache=LRUCache(maxsize=100))
     def decode_invoice(self, invoice: str) -> dict:
         return self.call("GET", f"/v1/payreq/{invoice}")
