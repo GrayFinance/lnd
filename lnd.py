@@ -4,11 +4,11 @@ from json import loads, dumps
 
 class Lnd:
 
-    def __init__(self, url: str, macaroon: str, certificate: str) -> None:
+    def __init__(self, url: str, macaroon: str, certificate: str = None) -> None:
         self.url = url
         self.macaroon = macaroon
         self.certificate = certificate
-    
+
     def call(self, method: str, path: str, query=None, stream=False, data=None):
         headers = {"Grpc-Metadata-macaroon": self.macaroon}
         if (stream == False):
