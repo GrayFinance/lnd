@@ -4,11 +4,11 @@ from json import loads, dumps
 
 class Lnd:
 
-    def __init__(self, url: str, macaroon: str, certificate: str = None) -> None:
+    def __init__(self, url: str, macaroon: str, certificate: str) -> None:
         self.url = url
         self.macaroon = macaroon
         self.certificate = certificate
-
+    
     def call(self, method: str, path: str, query=None, stream=False, data=None):
         headers = {"Grpc-Metadata-macaroon": self.macaroon}
         if (stream == False):
@@ -22,10 +22,11 @@ class Lnd:
     def wallet_balance(self) -> dict:
         return self.call("GET", "/v1/balance/blockchain")
     
-    def get_estimate_fee(self, address: str, amount: int, target_conf=144) -> dict:
-        return self.call("GET", f'/v1/transactions/fee?target_conf={target_conf}&AddrToAmount[{address}]={amount}')
+    def get_estimate_fee(self, address: str, amount: int, target_conf=144, spend_unconfirmed=True) -> dict:
+        query = {"target_conf": target_conf, f"AddrToAmount[{address}]": amount, "spend_unconfirmed": spend_unconfirmed}
+        return self.call("GET", "/v1/transactions/fee", query=query)
 
-    def send_coins(self, address: str, amount: int, sat_per_vbyte: int = 1, spend_unconfirmed=False) -> dict:
+    def send_coins(self, address: str, amount: int, sat_per_vbyte: int = 1, spend_unconfirmed=True) -> dict:
         data = {"addr": address, "amount": amount, "sat_per_vbyte": sat_per_vbyte, "spend_unconfirmed": spend_unconfirmed}
         return self.call("POST", "/v1/transactions", data=data)
     
