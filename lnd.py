@@ -2,6 +2,9 @@ from cachetools import cached, LRUCache
 from requests import request
 from json import loads, dumps
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 class Lnd:
 
     def __init__(self, url: str, macaroon: str, certificate: str) -> None:
@@ -35,7 +38,17 @@ class Lnd:
         if (type_address) and (account):
             query.update({"type": type_address, "account": account})
         return self.call("GET", "/v1/newaddress", query=query)
-    
+
+    def list_unspent(self, min_confs=1, max_confs=None, account=None) -> list:
+        query = {"min_confs": min_confs, "max_confs": max_confs}
+        if (max_confs == None):
+            query["max_confs"] = self.get_info()["block_height"]
+        
+        if (account):
+            query["account"] = account
+        
+        return self.call("GET", "/v1/utxos", query=query)
+     
     def channels_balance(self) -> dict:
         return self.call("GET", "/v1/balance/channels")
     
