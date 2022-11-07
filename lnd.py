@@ -48,7 +48,20 @@ class Lnd:
             query["account"] = account
         
         return self.call("GET", "/v1/utxos", query=query)
-     
+    
+    def list_chain_txns(self, start_height=None, end_height=None, account=None) -> dict:
+        query = {}
+        if (start_height):
+            query["start_height"] = start_height
+        
+        if (end_height):
+            query["end_height"] = end_height
+        
+        if (account):
+            query["account"] = account
+        
+        return self.call("GET", "/v1/transactions", query=query)
+    
     def channels_balance(self) -> dict:
         return self.call("GET", "/v1/balance/channels")
     
