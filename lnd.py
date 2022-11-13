@@ -1,5 +1,7 @@
 from cachetools import cached, LRUCache
 from requests import request
+from binascii import unhexlify
+from base64 import b64encode
 from json import loads, dumps
 
 import urllib3
@@ -62,13 +64,17 @@ class Lnd:
         
         return self.call("GET", "/v1/transactions", query=query)
     
+    def create_hold_invoice(self, hash: str, amount: int, memo: str = "", expiry=(60 * 5)) -> dict:
+        data = {"hash": b64encode(unhexlify(hash)).decode(), "value": amount, "memo": memo, "expiry": expiry}
+        return self.call("POST", "/v2/invoices/hodl", data=data)
+
     def channels_balance(self) -> dict:
         return self.call("GET", "/v1/balance/channels")
     
     def transactions_subscribe(self)  -> object:
         return self.call("GET", "/v1/transactions/subscribe", stream=True)
 
-    def create_invoice(self, amount: int, memo: str, expiry=(60 * 5)) -> dict:
+    def create_invoice(self, amount: int, memo: str = "", expiry=(60 * 5)) -> dict:
         return self.call("POST", "/v1/invoices", data={"value": amount, "memo": memo, "expiry": expiry})
     
     @cached(cache=LRUCache(maxsize=100))
