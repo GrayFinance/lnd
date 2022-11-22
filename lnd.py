@@ -64,10 +64,14 @@ class Lnd:
         
         return self.call("GET", "/v1/transactions", query=query)
     
-    def create_hold_invoice(self, hash: str, amount: int, memo: str = "", expiry=(60 * 5)) -> dict:
-        data = {"hash": b64encode(unhexlify(hash)).decode(), "value": amount, "memo": memo, "expiry": expiry}
+    def create_hold_invoice(self, payment_hash: str, amount: int, memo: str = "", expiry=(60 * 5)) -> dict:
+        data = {"hash": b64encode(unhexlify(payment_hash)).decode(), "value": amount, "memo": memo, "expiry": expiry}
         return self.call("POST", "/v2/invoices/hodl", data=data)
-
+    
+    def cancel_invoice(self, payment_hash: str) -> dict:
+        data = {"payment_hash": b64encode(unhexlify(payment_hash)).decode()}
+        return self.call("POST", "/v2/invoices/cancel", data=data)
+    
     def channels_balance(self) -> dict:
         return self.call("GET", "/v1/balance/channels")
     
